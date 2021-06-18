@@ -16,6 +16,11 @@ local lsp_status = require'lsp_status'
 -- register an handler for `$/progress` method
 lsp_status.setup()
 
+local capabilities = lsp.protocol.make_client_capabilities()
+
+-- turn on `window/workDoneProgress` capability
+lsp_status.init_capabilities(capabilities)
+
 local function on_attach(client)
   -- ... other stuff
 
@@ -25,8 +30,7 @@ end
 
 lspconfig.rust_analyzer.setup {  -- Rust Analyzer setup
   on_attach = on_attach,
-  -- add `window/workDoneProgress` to default client capabilities
-  capabilities = lsp_status.capabilities
+  capabilities = capabilities
 }
 ```
 
