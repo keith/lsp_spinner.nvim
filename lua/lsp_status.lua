@@ -5,8 +5,8 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 local cmd = vim.cmd
 local lsp = vim.lsp
 local spinner = {'▖', '▘', '▝', '▗'}
-local clients = {} -- key by client ID and bufnr (meta)
-local works = {} -- key by token and bufnr (meta)
+local clients = {} -- key by client ID
+local works = {} -- key by token
 
 local function build_status(work)
   local status = work.client_name
@@ -57,14 +57,23 @@ local function progress_callback(_, _, msg, client_id)
   cmd 'doautocmd User LspStatusChanged'
 end
 
+local function find_by_bufnr(tbl, bufnr)
+  for _, data in pairs(tbl) do
+    if data.bufnr == bufnr then
+      return data
+    end
+  end
+  return nil
+end
+
 local function get_status(bufnr)
   clean_stopped_clients()
   if not bufnr then
     bufnr = 0
   end
-  local client = clients[bufnr]
+  local client = find_by_bufnr(clients, bufnr)
   if not client then return '' end
-  local work = works[bufnr]
+  local work = find_by_bufnr(works, bufnr)
   if work then
     return build_status(work)
   end
@@ -83,16 +92,6 @@ end
 
 local function setup()
   lsp.handlers['$/progress'] = progress_callback
-  local metaindex = function(tbl, key)
-    for _, data in pairs(tbl) do
-      if data.bufnr == key then
-        return data
-      end
-    end
-    return nil
-  end
-  setmetatable(clients, {__index = metaindex})
-  setmetatable(works, {__index = metaindex})
 end
 
 local function on_attach(client, bufnr)
