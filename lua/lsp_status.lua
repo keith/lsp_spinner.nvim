@@ -71,9 +71,15 @@ local function get_status(bufnr)
   return client.name
 end
 
-local capabilities = lsp.protocol.make_client_capabilities()
-capabilities.window = capabilities.window or {}
-capabilities.window.workDoneProgress = true
+local function init_capabilities(capabilities)
+  vim.validate {capabilities = {capabilities, function(c)
+    if not type(c) == 'table' then return false end
+    if type(c.window) == 'table' then return true end
+  end, 'capabilities.window = table'}}
+  if not capabilities.window.workDoneProgress then
+    capabilities.window.workDoneProgress = true
+  end
+end
 
 local function setup()
   lsp.handlers['$/progress'] = progress_callback
@@ -100,6 +106,6 @@ end
 return {
   setup = setup,
   on_attach = on_attach,
-  capabilities = capabilities,
+  init_capabilities = init_capabilities,
   status = get_status,
 }
