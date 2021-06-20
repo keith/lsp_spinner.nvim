@@ -1,6 +1,6 @@
 ## lsp_status
 
-Retreive the status of [nvim](https://neovim.io/)'s builtin LSP clients.
+Nvim plugin to retrieve the name of the running LSP client(s) and display a spinner when a job is in progress.
 
 ### install
 
@@ -14,7 +14,11 @@ local lspconfig = require'lspconfig'
 local lsp_status = require'lsp_status'
 
 -- register an handler for `$/progress` method
-lsp_status.setup()
+-- options are optional
+lsp_status.setup {
+  spinner = {'⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'},
+  interval = 80 -- in ms
+}
 
 local capabilities = lsp.protocol.make_client_capabilities()
 
@@ -24,7 +28,6 @@ lsp_status.init_capabilities(capabilities)
 local function on_attach(client)
   -- ... other stuff
 
-  -- get client name
   lsp_status.on_attach(client)
 end
 
@@ -36,14 +39,9 @@ lspconfig.rust_analyzer.setup {  -- Rust Analyzer setup
 
 ### get status
 
-The status is either the LSP client name or, if it exists, a text built from the last "Work done progress" notification.
-
-See the [spec](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#workDoneProgress) for details.
-
 ```lua
 require'lsp_status'.status()
 ```
-Listen to the autocommand event `LspStatusChanged` to get notified when the status is updated.
 
 ### license
 Mozilla Public License 2.0
