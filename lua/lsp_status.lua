@@ -98,7 +98,7 @@ local function setup(options)
     return true
   end, 'options = {spinner = {"frame1", "frame2", "frame3"}, interval = 80 (ms)}'}}
   if options then
-    vim.tbl_extend('force', config, options)
+    config = vim.tbl_extend('force', config, options)
   end
   lsp.handlers['$/progress'] = progress_callback
 end
