@@ -2,82 +2,82 @@
 License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
-local cmd = vim.cmd
 local lsp = vim.lsp
-local spinner = {'▖', '▘', '▝', '▗'}
 local clients = {} -- key by client ID
-local works = {} -- key by token
-
-local function build_status(work)
-  local status = work.client_name
-  status = string.format('%s %s', status, work.title)
-  if work.message then status = string.format('%s %s', status, work.message) end
-  if work.percentage then status = string.format('%s %s%%', status, work.percentage) end
-  if work.frame then
-    status = string.format('%s %s', status, spinner[work.frame])
-  end
-  return status
-end
+local config = {
+  spinner = {'-', '\\', '|', '/'},
+  interval = 130
+}
 
 local function clean_stopped_clients()
-  for token, work in pairs(works) do
-    if lsp.client_is_stopped(work.client_id) then
-      works[token] = nil
-      clients[work.client_id] = nil
+  for id, client in ipairs(clients) do
+    if lsp.client_is_stopped(id) then
+      if client.timer then
+        client.timer:close()
+      end
+      table.remove(clients, id)
+    end
+  end
+end
+
+local function find_index(tb, value)
+  for i, v in ipairs(tb) do
+    if v == value then
+      return i
     end
   end
 end
 
 local function progress_callback(_, _, msg, client_id)
   local val = msg.value
-  if val.kind then
-    if val.kind == 'begin' then
-      local client = clients[client_id] or lsp.get_client_by_id(client_id)
-      if not client then return end
-      works[msg.token] = {
-        client_id = client_id,
-        client_name = client.name,
-        bufnr = client.bufnr,
-        title = val.title,
-        message = val.message,
-        percentage = val.percentage,
-        frame = 1
-      }
-    elseif val.kind == 'report' then
-      if val.message then
-        works[msg.token].message = val.message
-      end
-      works[msg.token].percentage = val.percentage
-      local prev_frame = works[msg.token].frame
-      works[msg.token].frame = prev_frame < #spinner and prev_frame + 1 or 1
-    elseif val.kind == 'end' then
-      works[msg.token] = nil
+  if val.kind == 'begin' then
+    table.insert(clients[client_id].jobs, msg.token)
+    if not clients[client_id].timer then
+      local timer = vim.loop.new_timer()
+      clients[client_id].timer = timer
+      clients[client_id].frame = 1
+      timer:start(config.interval, config.interval, vim.schedule_wrap(function()
+        clients[client_id].frame = clients[client_id].frame < #config.spinner
+          and clients[client_id].frame + 1 or 1
+      end))
+    end
+  elseif val.kind == 'end' then
+    local jobs = clients[client_id].jobs
+    local index = find_index(jobs, msg.token)
+    table.remove(jobs, index)
+    if vim.tbl_isempty(jobs) then
+      clients[client_id].timer:stop()
+      clients[client_id].timer:close()
+      clients[client_id].timer = nil
     end
   end
-  cmd 'doautocmd User LspStatusChanged'
 end
 
-local function find_by_bufnr(tbl, bufnr)
-  for _, data in pairs(tbl) do
-    if data.bufnr == bufnr then
-      return data
+local function get_clients_by_bufnr(bufnr)
+  local ids = {}
+  for id, client in ipairs(clients) do
+    if vim.tbl_contains(client.buffers, bufnr) then
+      table.insert(ids, id)
     end
   end
-  return nil
+  return ids
 end
 
 local function get_status(bufnr)
   clean_stopped_clients()
-  if not bufnr then
-    bufnr = 0
+  local status = ''
+  local ids = get_clients_by_bufnr(bufnr)
+  for i, id in ipairs(ids) do
+    local client = clients[id]
+    status = string.format('%s%s', status, client.name)
+    if not vim.tbl_isempty(client.jobs) then
+      status = string.format('%s %s', status, config.spinner[client.frame])
+    end
+    if i < vim.tbl_count(ids) then
+      status = string.format('%s ', status)
+    end
   end
-  local client = find_by_bufnr(clients, bufnr)
-  if not client then return '' end
-  local work = find_by_bufnr(works, bufnr)
-  if work then
-    return build_status(work)
-  end
-  return client.name
+  return status
 end
 
 local function init_capabilities(capabilities)
@@ -90,16 +90,31 @@ local function init_capabilities(capabilities)
   end
 end
 
-local function setup()
+local function setup(options)
+  vim.validate {config = {options, function(c)
+    if c and type(c) ~= 'table' then return false end
+    if c and c.spinner and type(c.spinner) ~= 'table' then return false end
+    if c and c.interval and type(c.interval) ~= 'number' then return false end
+    return true
+  end, 'options = {spinner = {"frame1", "frame2", "frame3"}, interval = 80 (ms)}'}}
+  if options then
+    vim.tbl_extend('force', config, options)
+  end
   lsp.handlers['$/progress'] = progress_callback
 end
 
 local function on_attach(client, bufnr)
-  clients[client.id] = {
-    name = client.name,
-    bufnr = bufnr,
-  }
-  cmd 'doautocmd User LspStatusChanged'
+  if not clients[client.id] then
+    clients[client.id] = {
+      name = client.name,
+      jobs = {},
+      buffers = {bufnr},
+    }
+  else
+    if not vim.tbl_contains(clients[client.id].buffers, bufnr) then
+      table.insert(clients[client.id].buffers, bufnr)
+    end
+  end
 end
 
 return {
