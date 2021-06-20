@@ -25,10 +25,10 @@ local capabilities = lsp.protocol.make_client_capabilities()
 -- turn on `window/workDoneProgress` capability
 lsp_status.init_capabilities(capabilities)
 
-local function on_attach(client)
+local function on_attach(client, bufnr)
   -- ... other stuff
 
-  lsp_status.on_attach(client)
+  lsp_status.on_attach(client, bufnr)
 end
 
 lspconfig.rust_analyzer.setup {  -- Rust Analyzer setup
