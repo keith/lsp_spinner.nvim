@@ -1,6 +1,6 @@
 ## lsp_status
 
-Nvim plugin to retrieve the name of the running LSP client(s) and display a spinner when a job is in progress.
+Nvim plugin to display the name of the running LSP server(s) and a spinner when a job is in progress.
 
 ### install
 
