@@ -4,28 +4,19 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local lsp = vim.lsp
 local clients = {} -- key by client ID
-local config = {
-  spinner = {'-', '\\', '|', '/'},
-  interval = 130
-}
+local config = {spinner = {'-', '\\', '|', '/'}, interval = 130}
 
 local function clean_stopped_clients()
   for id, client in ipairs(clients) do
     if lsp.client_is_stopped(id) then
-      if client.timer then
-        client.timer:close()
-      end
+      if client.timer then client.timer:close() end
       table.remove(clients, id)
     end
   end
 end
 
 local function find_index(tb, value)
-  for i, v in ipairs(tb) do
-    if v == value then
-      return i
-    end
-  end
+  for i, v in ipairs(tb) do if v == value then return i end end
 end
 
 local function progress_callback(_, _, msg, client_id)
@@ -37,8 +28,9 @@ local function progress_callback(_, _, msg, client_id)
       clients[client_id].timer = timer
       clients[client_id].frame = 1
       timer:start(config.interval, config.interval, vim.schedule_wrap(function()
-        clients[client_id].frame = clients[client_id].frame < #config.spinner
-          and clients[client_id].frame + 1 or 1
+        clients[client_id].frame =
+          clients[client_id].frame < #config.spinner and
+            clients[client_id].frame + 1 or 1
       end))
     end
   elseif val.kind == 'end' then
@@ -56,9 +48,7 @@ end
 local function get_clients_by_bufnr(bufnr)
   local ids = {}
   for id, client in ipairs(clients) do
-    if vim.tbl_contains(client.buffers, bufnr) then
-      table.insert(ids, id)
-    end
+    if vim.tbl_contains(client.buffers, bufnr) then table.insert(ids, id) end
   end
   return ids
 end
@@ -73,43 +63,48 @@ local function get_status(bufnr)
     if not vim.tbl_isempty(client.jobs) then
       status = string.format('%s %s', status, config.spinner[client.frame])
     end
-    if i < vim.tbl_count(ids) then
-      status = string.format('%s ', status)
-    end
+    if i < vim.tbl_count(ids) then status = string.format('%s ', status) end
   end
   return status
 end
 
 local function init_capabilities(capabilities)
-  vim.validate {capabilities = {capabilities, function(c)
-    if not type(c) == 'table' then return false end
-    if type(c.window) == 'table' then return true end
-  end, 'capabilities.window = table'}}
+  vim.validate {
+    capabilities = {
+      capabilities, function(c)
+        if not type(c) == 'table' then return false end
+        if type(c.window) == 'table' then return true end
+      end, 'capabilities.window = table',
+    },
+  }
   if not capabilities.window.workDoneProgress then
     capabilities.window.workDoneProgress = true
   end
 end
 
 local function setup(options)
-  vim.validate {config = {options, function(c)
-    if c and type(c) ~= 'table' then return false end
-    if c and c.spinner and type(c.spinner) ~= 'table' then return false end
-    if c and c.interval and type(c.interval) ~= 'number' then return false end
-    return true
-  end, 'options = {spinner = {"frame1", "frame2", "frame3"}, interval = 80 (ms)}'}}
-  if options then
-    config = vim.tbl_extend('force', config, options)
-  end
+  vim.validate {
+    config = {
+      options, function(c)
+        if c and type(c) ~= 'table' then return false end
+        if c and c.spinner and type(c.spinner) ~= 'table' then
+          return false
+        end
+        if c and c.interval and type(c.interval) ~= 'number' then
+          return false
+        end
+        return true
+      end,
+      'options = {spinner = {"frame1", "frame2", "frame3"}, interval = 80 (ms)}',
+    },
+  }
+  if options then config = vim.tbl_extend('force', config, options) end
   lsp.handlers['$/progress'] = progress_callback
 end
 
 local function on_attach(client, bufnr)
   if not clients[client.id] then
-    clients[client.id] = {
-      name = client.name,
-      jobs = {},
-      buffers = {bufnr},
-    }
+    clients[client.id] = {name = client.name, jobs = {}, buffers = {bufnr}}
   else
     if not vim.tbl_contains(clients[client.id].buffers, bufnr) then
       table.insert(clients[client.id].buffers, bufnr)
