@@ -17,7 +17,8 @@ local lsp_status = require'lsp_status'
 -- options are optional
 lsp_status.setup {
   spinner = {'⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'},
-  interval = 80 -- in ms
+  interval = 80, -- spinner frame rate in ms
+  redraw_rate = 100, -- max refresh rate of statusline in ms
 }
 
 local capabilities = lsp.protocol.make_client_capabilities()
