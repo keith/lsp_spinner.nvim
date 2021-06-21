@@ -3,8 +3,14 @@ License, v. 2.0. If a copy of the MPL was not distributed with this
 file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local lsp = vim.lsp
+
 local clients = {} -- key by client ID
-local config = {spinner = {'-', '\\', '|', '/'}, interval = 130}
+local config = {
+  spinner = {'-', '\\', '|', '/'},
+  interval = 130,
+  redraw_rate = 100,
+}
+local redraw = require 'lsp_status.redraw'
 
 local function clean_stopped_clients()
   for id, client in ipairs(clients) do
@@ -27,6 +33,9 @@ end
 
 local function progress_callback(_, _, msg, client_id)
   local val = msg.value
+  if not clients[client_id] then
+    return
+  end
   if val.kind == 'begin' then
     table.insert(clients[client_id].jobs, msg.token)
     if not clients[client_id].timer then
@@ -37,6 +46,7 @@ local function progress_callback(_, _, msg, client_id)
         clients[client_id].frame =
           clients[client_id].frame < #config.spinner and
             clients[client_id].frame + 1 or 1
+        redraw.redraw()
       end))
     end
   elseif val.kind == 'end' then
@@ -49,6 +59,7 @@ local function progress_callback(_, _, msg, client_id)
       clients[client_id].timer = nil
     end
   end
+  redraw.redraw()
 end
 
 local function get_clients_by_bufnr(bufnr)
@@ -97,10 +108,10 @@ local function init_capabilities(capabilities)
   end
 end
 
-local function setup(options)
+local function setup(_config)
   vim.validate {
     config = {
-      options, function(c)
+      _config, function(c)
         if c and type(c) ~= 'table' then
           return false
         end
@@ -115,10 +126,11 @@ local function setup(options)
       'options = {spinner = {"frame1", "frame2", "frame3"}, interval = 80 (ms)}',
     },
   }
-  if options then
-    config = vim.tbl_extend('force', config, options)
+  if _config then
+    config = vim.tbl_extend('force', config, _config)
   end
   lsp.handlers['$/progress'] = progress_callback
+  redraw.init(config)
 end
 
 local function on_attach(client, bufnr)
@@ -131,9 +143,11 @@ local function on_attach(client, bufnr)
   end
 end
 
-return {
+local M = {
   setup = setup,
   on_attach = on_attach,
   init_capabilities = init_capabilities,
   status = get_status,
 }
+
+return M
