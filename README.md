@@ -39,8 +39,18 @@ lspconfig.rust_analyzer.setup {  -- Rust Analyzer setup
 
 ### get status
 
+just call the method `status`
 ```lua
-require'lsp_status'.status()
+require'lsp_status'.status(bufnr)
+```
+
+example using it with [ponton.nvim](https://github.com/doums/ponton.nvim)
+```lua
+    lsp_status = {
+      style = {'#C5656B', line_bg},
+      fn = require'lsp_status'.status,
+      padding = {nil, 2},
+    },
 ```
 
 ### license
