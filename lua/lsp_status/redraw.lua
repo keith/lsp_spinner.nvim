@@ -13,20 +13,19 @@ local function init(_config)
   config = _config
 end
 
-local function redraw_logic()
-  -- cmd 'redrawstatus!'
-  print('redraw !')
-  last_redraw = uv.now()
+local function redraw_logic(now)
+  last_redraw = now or uv.now()
+  cmd 'redrawstatus!'
 end
 
 local function redraw()
-  if not last_redraw or uv.now() - config.redraw_rate >= last_redraw then
-    redraw_logic()
+  local now = uv.now()
+  if not last_redraw or now - last_redraw >= config.redraw_rate then
+    timer:stop()
+    redraw_logic(now)
   elseif not timer:is_active() then
-    timer:start(config.redraw_rate, 0, vim.schedule_wrap(function()
-      timer:stop()
-      redraw_logic()
-    end))
+    timer:start((last_redraw + config.redraw_rate) - now, 0,
+                vim.schedule_wrap(redraw_logic))
   end
 end
 

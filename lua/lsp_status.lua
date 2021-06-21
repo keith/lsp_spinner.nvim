@@ -4,13 +4,13 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local lsp = vim.lsp
 
-local clients = {} -- key by client ID
+local redraw = require 'lsp_status.redraw'
+local clients = {} -- indexed by client ID
 local config = {
   spinner = {'-', '\\', '|', '/'},
   interval = 130,
   redraw_rate = 100,
 }
-local redraw = require 'lsp_status.redraw'
 
 local function clean_stopped_clients()
   for id, client in ipairs(clients) do
@@ -57,9 +57,9 @@ local function progress_callback(_, _, msg, client_id)
       clients[client_id].timer:stop()
       clients[client_id].timer:close()
       clients[client_id].timer = nil
+      redraw.redraw()
     end
   end
-  redraw.redraw()
 end
 
 local function get_clients_by_bufnr(bufnr)
