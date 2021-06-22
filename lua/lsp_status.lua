@@ -115,15 +115,21 @@ local function setup(_config)
         if c and type(c) ~= 'table' then
           return false
         end
-        if c and c.spinner and type(c.spinner) ~= 'table' then
+        if c and c.spinner and not vim.tbl_islist(c.spinner) then
           return false
         end
         if c and c.interval and type(c.interval) ~= 'number' then
           return false
         end
+        if c and c.redraw_rate and type(c.redraw_rate) ~= 'number' then
+          return false
+        end
         return true
-      end,
-      'options = {spinner = {"frame1", "frame2", "frame3"}, interval = 80 (ms)}',
+      end, [[table with keys (optional)
+        spinner: table list[string] - the spinner frames
+        interval: number - spinner frame rate in ms
+        redraw_rate: number - statusline max refresh rate in ms
+      ]],
     },
   }
   if _config then
