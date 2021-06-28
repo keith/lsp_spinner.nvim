@@ -4,7 +4,7 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local lsp = vim.lsp
 
-local redraw = require 'lsp_status.redraw'
+local redraw = require 'lsp_spinner.redraw'
 local clients = {} -- indexed by client ID
 local config = {
   spinner = {'-', '\\', '|', '/'},
