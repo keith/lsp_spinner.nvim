@@ -31,13 +31,14 @@ local function find_index(tb, value)
   end
 end
 
-local function progress_callback(_, _, msg, client_id)
-  local val = msg.value
+local function progress_callback(_, result, ctx)
+  local client_id = ctx.client_id
+  local val = result.value
   if not clients[client_id] then
     return
   end
   if val.kind == 'begin' then
-    table.insert(clients[client_id].jobs, msg.token)
+    table.insert(clients[client_id].jobs, result.token)
     if not clients[client_id].timer then
       local timer = vim.loop.new_timer()
       clients[client_id].timer = timer
@@ -51,7 +52,7 @@ local function progress_callback(_, _, msg, client_id)
     end
   elseif val.kind == 'end' then
     local jobs = clients[client_id].jobs
-    local index = find_index(jobs, msg.token)
+    local index = find_index(jobs, result.token)
     table.remove(jobs, index)
     if vim.tbl_isempty(jobs) then
       clients[client_id].timer:stop()
