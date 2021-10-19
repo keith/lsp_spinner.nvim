@@ -4,23 +4,35 @@ Nvim plugin to display the name of the running LSP server(s) and a spinner when 
 
 ### install
 
-```
-paq 'doums/lsp_spinner.nvim'
+```lua
+paq('doums/lsp_spinner.nvim')
 ```
 
 ### setup
+
 ```lua
-local lspconfig = require'lspconfig'
-local lsp_spinner = require'lsp_spinner'
+local lspconfig = require('lspconfig')
+local lsp_spinner = require('lsp_spinner')
 
 -- register an handler for `$/progress` method
 -- options are optional
-lsp_spinner.setup {
-  spinner = {'⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'},
+lsp_spinner.setup({
+  spinner = {
+    '⠋',
+    '⠙',
+    '⠹',
+    '⠸',
+    '⠼',
+    '⠴',
+    '⠦',
+    '⠧',
+    '⠇',
+    '⠏',
+  },
   interval = 80, -- spinner frame rate in ms
   redraw_rate = 100, -- max refresh rate of statusline in ms
   placeholder = '  ', -- it will be displayed when there is no activity
-}
+})
 
 local capabilities = lsp.protocol.make_client_capabilities()
 
@@ -33,25 +45,26 @@ local function on_attach(client, bufnr)
   lsp_spinner.on_attach(client, bufnr)
 end
 
-lspconfig.rust_analyzer.setup {  -- Rust Analyzer setup
+-- Rust Analyzer setup
+lspconfig.rust_analyzer.setup({
   on_attach = on_attach,
-  capabilities = capabilities
-}
+  capabilities = capabilities,
+})
 ```
 
 ### get status
 
 just call the method `status`
 ```lua
-require'lsp_spinner'.status(bufnr)
+require('lsp_spinner').status(bufnr)
 ```
 
 example using it with [ponton.nvim](https://github.com/doums/ponton.nvim)
 ```lua
     lsp_spinner = {
-      style = {'#C5656B', line_bg},
-      fn = require'lsp_spinner'.status,
-      padding = {nil, 2},
+      style = { '#C5656B', line_bg },
+      fn = require('lsp_spinner').status,
+      padding = { nil, 2 },
     },
 ```
 

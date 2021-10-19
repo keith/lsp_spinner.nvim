@@ -15,7 +15,7 @@ end
 
 local function redraw_logic(now)
   last_redraw = now or uv.now()
-  cmd 'redrawstatus!'
+  cmd('redrawstatus!')
 end
 
 local function redraw()
@@ -24,11 +24,14 @@ local function redraw()
     timer:stop()
     redraw_logic(now)
   elseif not timer:is_active() then
-    timer:start((last_redraw + config.redraw_rate) - now, 0,
-                vim.schedule_wrap(redraw_logic))
+    timer:start(
+      (last_redraw + config.redraw_rate) - now,
+      0,
+      vim.schedule_wrap(redraw_logic)
+    )
   end
 end
 
-local M = {init = init, redraw = redraw}
+local M = { init = init, redraw = redraw }
 
 return M

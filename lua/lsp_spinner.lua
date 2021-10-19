@@ -4,10 +4,10 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/. ]]
 
 local lsp = vim.lsp
 
-local redraw = require 'lsp_spinner.redraw'
+local redraw = require('lsp_spinner.redraw')
 local clients = {} -- indexed by client ID
 local config = {
-  spinner = {'-', '\\', '|', '/'},
+  spinner = { '-', '\\', '|', '/' },
   interval = 130,
   redraw_rate = 100,
 }
@@ -43,12 +43,17 @@ local function progress_callback(_, result, ctx)
       local timer = vim.loop.new_timer()
       clients[client_id].timer = timer
       clients[client_id].frame = 1
-      timer:start(config.interval, config.interval, vim.schedule_wrap(function()
-        clients[client_id].frame =
-          clients[client_id].frame < #config.spinner and
-            clients[client_id].frame + 1 or 1
-        redraw.redraw()
-      end))
+      timer:start(
+        config.interval,
+        config.interval,
+        vim.schedule_wrap(function()
+          clients[client_id].frame = clients[client_id].frame
+                < #config.spinner
+              and clients[client_id].frame + 1
+            or 1
+          redraw.redraw()
+        end)
+      )
     end
   elseif val.kind == 'end' then
     local jobs = clients[client_id].jobs
@@ -94,27 +99,30 @@ local function get_status(bufnr)
 end
 
 local function init_capabilities(capabilities)
-  vim.validate {
+  vim.validate({
     capabilities = {
-      capabilities, function(c)
+      capabilities,
+      function(c)
         if not type(c) == 'table' then
           return false
         end
         if type(c.window) == 'table' then
           return true
         end
-      end, 'capabilities.window = table',
+      end,
+      'capabilities.window = table',
     },
-  }
+  })
   if not capabilities.window.workDoneProgress then
     capabilities.window.workDoneProgress = true
   end
 end
 
 local function setup(_config)
-  vim.validate {
+  vim.validate({
     config = {
-      _config, function(c)
+      _config,
+      function(c)
         if c and type(c) ~= 'table' then
           return false
         end
@@ -128,13 +136,14 @@ local function setup(_config)
           return false
         end
         return true
-      end, [[table with keys (optional)
+      end,
+      [[table with keys (optional)
         spinner: table list[string] - the spinner frames
         interval: number - spinner frame rate in ms
         redraw_rate: number - statusline max refresh rate in ms
       ]],
     },
-  }
+  })
   if _config then
     config = vim.tbl_extend('force', config, _config)
   end
@@ -144,7 +153,7 @@ end
 
 local function on_attach(client, bufnr)
   if not clients[client.id] then
-    clients[client.id] = {name = client.name, jobs = {}, buffers = {bufnr}}
+    clients[client.id] = { name = client.name, jobs = {}, buffers = { bufnr } }
   else
     if not vim.tbl_contains(clients[client.id].buffers, bufnr) then
       table.insert(clients[client.id].buffers, bufnr)
