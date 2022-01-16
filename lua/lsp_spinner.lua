@@ -47,8 +47,7 @@ local function progress_callback(_, result, ctx)
         config.interval,
         config.interval,
         vim.schedule_wrap(function()
-          clients[client_id].frame = clients[client_id].frame
-                < #config.spinner
+          clients[client_id].frame = clients[client_id].frame < #config.spinner
               and clients[client_id].frame + 1
             or 1
           redraw.redraw()
@@ -59,7 +58,7 @@ local function progress_callback(_, result, ctx)
     local jobs = clients[client_id].jobs
     local index = find_index(jobs, result.token)
     table.remove(jobs, index)
-    if vim.tbl_isempty(jobs) then
+    if vim.tbl_isempty(jobs) and clients[client_id].timer then
       clients[client_id].timer:stop()
       clients[client_id].timer:close()
       clients[client_id].timer = nil
@@ -99,6 +98,7 @@ local function get_status(bufnr)
 end
 
 local function init_capabilities(capabilities)
+  ---@diagnostic disable-next-line: redundant-parameter
   vim.validate({
     capabilities = {
       capabilities,
@@ -119,6 +119,7 @@ local function init_capabilities(capabilities)
 end
 
 local function setup(_config)
+  ---@diagnostic disable-next-line: redundant-parameter
   vim.validate({
     config = {
       _config,
