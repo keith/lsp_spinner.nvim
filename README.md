@@ -1,14 +1,15 @@
 ## lsp_spinner.nvim
 
-Nvim plugin to display the name of the running LSP server(s) and a spinner when a job is in progress.
+Nvim plugin to display the name of the running LSP client(s) and
+a spinner when there are jobs in progress.
 
-### install
+### Install
 
 ```lua
 paq('doums/lsp_spinner.nvim')
 ```
 
-### setup
+### Setup
 
 ```lua
 local lspconfig = require('lspconfig')
@@ -31,7 +32,9 @@ lsp_spinner.setup({
   },
   interval = 80, -- spinner frame rate in ms
   redraw_rate = 100, -- max refresh rate of statusline in ms
-  placeholder = '  ', -- it will be displayed when there is no activity
+  -- placeholder displayed in place of the spinner when there is
+  -- no activity for a given LSP client
+  placeholder = ' ',
 })
 
 local capabilities = lsp.protocol.make_client_capabilities()
@@ -52,14 +55,29 @@ lspconfig.rust_analyzer.setup({
 })
 ```
 
-### get status
+### Usage
 
-just call the method `status`
+The plugin exposes 2 Lua functions to get the LSP clients status:
+
+- `status()`
+
+Returns the name(s) of all running LSP client(s).
+
 ```lua
-require('lsp_spinner').status(bufnr)
+local status = require('lsp_spinner').status()
 ```
 
-example using it with [ponton.nvim](https://github.com/doums/ponton.nvim)
+- `buf_status(bufnr)`
+
+Returns the name(s) of the running LSP client(s) attached to the
+given buffer. If no `bufnr` is given, the current buffer is used.
+
+```lua
+local status = require('lsp_spinner').buf_status(bufnr)
+```
+
+Example with [ponton.nvim](https://github.com/doums/ponton.nvim)
+
 ```lua
     lsp_spinner = {
       style = { '#C5656B', line_bg },
@@ -69,4 +87,5 @@ example using it with [ponton.nvim](https://github.com/doums/ponton.nvim)
 ```
 
 ### license
+
 Mozilla Public License 2.0

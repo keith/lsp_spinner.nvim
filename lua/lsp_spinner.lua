@@ -77,16 +77,13 @@ local function get_clients_by_bufnr(bufnr)
   return ids
 end
 
-local function get_status(bufnr)
-  bufnr = bufnr or vim.api.nvim_get_current_buf()
-  clean_stopped_clients()
+local function make_status(ids)
   local status = ''
-  local ids = get_clients_by_bufnr(bufnr)
   for i, id in ipairs(ids) do
     local client = clients[id]
     status = string.format('%s%s', status, client.name)
     if not vim.tbl_isempty(client.jobs) then
-      status = string.format('%s %s', status, config.spinner[client.frame])
+      status = string.format('%s%s', status, config.spinner[client.frame])
     elseif config.placeholder then
       status = string.format('%s%s', status, config.placeholder)
     end
@@ -95,6 +92,17 @@ local function get_status(bufnr)
     end
   end
   return status
+end
+
+local function get_buf_status(bufnr)
+  clean_stopped_clients()
+  local ids = get_clients_by_bufnr(bufnr or vim.api.nvim_get_current_buf())
+  return make_status(ids)
+end
+
+local function get_status()
+  clean_stopped_clients()
+  return make_status(vim.tbl_keys(clients))
 end
 
 local function init_capabilities(capabilities)
@@ -167,6 +175,7 @@ local M = {
   on_attach = on_attach,
   init_capabilities = init_capabilities,
   status = get_status,
+  buf_status = get_buf_status,
 }
 
 return M
