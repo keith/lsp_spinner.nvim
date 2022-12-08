@@ -1,7 +1,8 @@
 ## lsp_spinner.nvim
 
-Nvim plugin to display the name of the running LSP client(s) and
-a spinner when there are jobs in progress.
+Nvim library to get the name of the running LSP client(s) and
+a spinner when there are jobs in progress. Intended for use in
+statusline.
 
 ### Install
 
@@ -57,11 +58,12 @@ lspconfig.rust_analyzer.setup({
 
 ### Usage
 
-The plugin exposes 2 Lua functions to get the LSP clients status:
+The library exposes 2 Lua functions:
 
 - `status()`
 
-Returns the name(s) of all running LSP client(s).
+Returns (`string`) the name(s) of **all** running LSP client(s).\
+Returns `nil` if there is no running client.
 
 ```lua
 local status = require('lsp_spinner').status()
@@ -69,12 +71,17 @@ local status = require('lsp_spinner').status()
 
 - `buf_status(bufnr)`
 
-Returns the name(s) of the running LSP client(s) attached to the
-given buffer. If no `bufnr` is given, the current buffer is used.
+Returns (`string`) the name(s) of the running LSP client(s)
+attached to the given buffer. If no `bufnr` is given, the current
+buffer is used.\
+Returns `nil` if there is no running client.
 
 ```lua
 local status = require('lsp_spinner').buf_status(bufnr)
 ```
+
+Each client name is followed by a spinner frame if there is work
+in progress for the given client.
 
 Example with [ponton.nvim](https://github.com/doums/ponton.nvim)
 
@@ -86,6 +93,6 @@ Example with [ponton.nvim](https://github.com/doums/ponton.nvim)
     },
 ```
 
-### license
+### License
 
 Mozilla Public License 2.0

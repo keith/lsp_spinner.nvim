@@ -78,6 +78,9 @@ local function get_clients_by_bufnr(bufnr)
 end
 
 local function make_status(ids)
+  if vim.tbl_isempty(ids) then
+    return
+  end
   local status = ''
   for i, id in ipairs(ids) do
     local client = clients[id]
