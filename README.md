@@ -38,7 +38,7 @@ lsp_spinner.setup({
   placeholder = ' ',
 })
 
-local capabilities = lsp.protocol.make_client_capabilities()
+local capabilities = vim.lsp.protocol.make_client_capabilities()
 
 -- turn on `window/workDoneProgress` capability
 lsp_spinner.init_capabilities(capabilities)
