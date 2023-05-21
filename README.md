@@ -3,7 +3,7 @@
 This plugin is now deprecated and will no longer receive updates.
 
 If you look for a similar plugin with a better implementation use
-`doums/lswip.nvim` instead
+[doums/lswip.nvim](https://github.com/doums/lswip.nvim) instead
 
 ## lsp_spinner.nvim
 
